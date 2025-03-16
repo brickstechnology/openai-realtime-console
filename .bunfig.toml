@@ -1,0 +1,14 @@
+[install]
+# Optional Bun-specific configuration
+exact = true    # Use exact versions when installing
+dev = false     # Default to production dependencies
+production = true
+
+[test]
+# Bun test configuration
+coverage = true # Generate coverage by default
+
+[debug]
+# Debug configuration for Bun
+# Uncomment if needed
+# breakpoints = true 

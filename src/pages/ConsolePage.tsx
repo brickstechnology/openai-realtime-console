@@ -9,11 +9,11 @@
 const USE_LOCAL_RELAY_SERVER_URL: string | undefined = void 0;
 
 // Flowise Base URL
-const FLOWISE_BASE_URL = process.env.REACT_APP_FLOWISE_BASE_URL;
+const FLOWISE_BASE_URL = import.meta.env.VITE_FLOWISE_BASE_URL;
 // Flowise API Key
-const FLOWISE_API_KEY = process.env.REACT_APP_FLOWISE_API_KEY;
+const FLOWISE_API_KEY = import.meta.env.VITE_FLOWISE_API_KEY;
 // Flowise Chatflow ID
-const FLOWISE_CHATFLOW_ID = process.env.REACT_APP_FLOWISE_CHATFLOW_ID;
+const FLOWISE_CHATFLOW_ID = import.meta.env.VITE_FLOWISE_CHATFLOW_ID;
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 
@@ -26,7 +26,16 @@ import { WavRecorder, WavStreamPlayer } from '../lib/wavtools/index.js';
 import { instructions } from '../utils/conversation_config.js';
 import { WavRenderer } from '../utils/wav_renderer';
 
-import { X, Edit, Zap, ArrowUp, ArrowDown, Book, Search, Code } from 'react-feather';
+import {
+  X,
+  Edit,
+  Zap,
+  ArrowUp,
+  ArrowDown,
+  Book,
+  Search,
+  Code,
+} from 'react-feather';
 import { Button } from '../components/button/Button';
 import { Toggle } from '../components/toggle/Toggle';
 
@@ -51,21 +60,21 @@ interface Coordinates {
 }
 
 interface ToolMessage {
-  type: string
-  content: string
-  artifacts?: any
-  sources?: any
+  type: string;
+  content: string;
+  artifacts?: any;
+  sources?: any;
 }
 
 interface Tool {
   name: string;
   description: string;
   parameters?: {
-    type: string,
-    properties: Record<string, any>,
-    required: string[]
-  },
-  messages?: ToolMessage[]
+    type: string;
+    properties: Record<string, any>;
+    required: string[];
+  };
+  messages?: ToolMessage[];
 }
 
 /**
@@ -410,54 +419,66 @@ export function ConsolePage() {
 
     // execute fetch request to get the tools
     const fetchTools = async () => {
-      const response = await fetch(`${FLOWISE_BASE_URL}/api/v1/openai-realtime/${FLOWISE_CHATFLOW_ID}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + FLOWISE_API_KEY
+      const response = await fetch(
+        `${FLOWISE_BASE_URL}/api/v1/openai-realtime/${FLOWISE_CHATFLOW_ID}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'Bearer ' + FLOWISE_API_KEY,
+          },
         }
-      });
+      );
       const tools = await response.json();
       if (tools) {
         setTools(tools);
         for (const tool of tools) {
-          if (Object.hasOwnProperty.call(client.tools, tool.name)) continue
-          client.addTool(tool,
-            async (args: any) => {
-              const response = await fetch(`${FLOWISE_BASE_URL}/api/v1/openai-realtime/${FLOWISE_CHATFLOW_ID}`, {
+          if (Object.hasOwnProperty.call(client.tools, tool.name)) continue;
+          client.addTool(tool, async (args: any) => {
+            const response = await fetch(
+              `${FLOWISE_BASE_URL}/api/v1/openai-realtime/${FLOWISE_CHATFLOW_ID}`,
+              {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': 'Bearer ' + FLOWISE_API_KEY
+                  Authorization: 'Bearer ' + FLOWISE_API_KEY,
                 },
                 body: JSON.stringify({
                   chatId: sessionID,
                   toolName: tool.name,
                   inputArgs: args,
                 }),
-              });
-              const result = await response.json();
-              const toolOutput = result.output;
-              const sources = result.sourceDocuments;
-              const artifacts = result.artifacts;
+              }
+            );
+            const result = await response.json();
+            const toolOutput = result.output;
+            const sources = result.sourceDocuments;
+            const artifacts = result.artifacts;
 
-              setTools((tools) => {
-                const newTools = [...tools];
-                const toolIndex = newTools.findIndex((t) => t.name === tool.name);
-                if (toolIndex >= 0) {
-                  const newTool = { ...newTools[toolIndex] };
-                  newTool.messages = newTool.messages || [];
-                  newTool.messages.push({ type: 'input', content: JSON.stringify(args) });
-                  newTool.messages.push({ type: 'output', content: toolOutput, sources, artifacts });
-                  newTools[toolIndex] = newTool;
-                }
-                return newTools;
-              });
+            setTools((tools) => {
+              const newTools = [...tools];
+              const toolIndex = newTools.findIndex((t) => t.name === tool.name);
+              if (toolIndex >= 0) {
+                const newTool = { ...newTools[toolIndex] };
+                newTool.messages = newTool.messages || [];
+                newTool.messages.push({
+                  type: 'input',
+                  content: JSON.stringify(args),
+                });
+                newTool.messages.push({
+                  type: 'output',
+                  content: toolOutput,
+                  sources,
+                  artifacts,
+                });
+                newTools[toolIndex] = newTool;
+              }
+              return newTools;
+            });
 
-              return toolOutput;
-            }
-          );
-        };
+            return toolOutput;
+          });
+        }
       }
     };
 
@@ -508,8 +529,12 @@ export function ConsolePage() {
     };
   }, []);
 
-  const renderToolContent = (toolMessageContent: any, sources?: any, artifacts?: any) => {
-    let sourcesHTML = (<></>);
+  const renderToolContent = (
+    toolMessageContent: any,
+    sources?: any,
+    artifacts?: any
+  ) => {
+    let sourcesHTML = <></>;
     if (sources && sources.length) {
       sourcesHTML = (
         <div>
@@ -523,12 +548,12 @@ export function ConsolePage() {
                   onClick={() => alert(source.pageContent)}
                 />
               </div>
-            )
+            );
           })}
         </div>
-      )
+      );
     }
-    let artifactsHTML = (<></>);
+    let artifactsHTML = <></>;
     if (artifacts && artifacts.length) {
       const imgArtifacts = [];
       for (let i = 0; i < artifacts.length; i++) {
@@ -537,10 +562,10 @@ export function ConsolePage() {
           imgArtifacts.push({
             type: artifact.type,
             data: `${FLOWISE_BASE_URL}/api/v1/get-upload-file?chatflowId=${FLOWISE_CHATFLOW_ID}&chatId=${sessionID}&fileName=${artifact.data.replace(
-                'FILE-STORAGE::',
-                ''
-            )}`
-          })
+              'FILE-STORAGE::',
+              ''
+            )}`,
+          });
         }
       }
       artifactsHTML = (
@@ -550,10 +575,10 @@ export function ConsolePage() {
               <div key={i} className="img-container">
                 <img className="image" src={artifact.data} />
               </div>
-            )
+            );
           })}
         </div>
-      )
+      );
     }
 
     return (
@@ -563,9 +588,14 @@ export function ConsolePage() {
           components={{
             code({ node, inline, className, children, ...props }: any) {
               const match = /language-(\w+)/.exec(className || '');
-    
+
               return !inline && match ? (
-                <SyntaxHighlighter style={okaidia} PreTag="div" language={match[1]} {...props}>
+                <SyntaxHighlighter
+                  style={okaidia}
+                  PreTag="div"
+                  language={match[1]}
+                  {...props}
+                >
                   {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
               ) : (
@@ -580,8 +610,8 @@ export function ConsolePage() {
         </ReactMarkdown>
         {sourcesHTML}
       </>
-    )
-  }
+    );
+  };
 
   const renderIcon = (tabName: string) => {
     switch (tabName) {
@@ -592,7 +622,7 @@ export function ConsolePage() {
       default:
         return Search;
     }
-  }
+  };
 
   /**
    * Render the application
@@ -800,20 +830,30 @@ export function ConsolePage() {
           </div>
           <div className="content-block kv">
             <div className="content-block-body content-kv">
-              {tools && tools.length && (tools[activeTab].messages ?? []).map((toolMessageItem, i) => {
-                return (
-                  <div className="conversation-item" key={i}>
-                    <div className={`speaker ${toolMessageItem.type === 'input' ? 'user' : 'assistant'}`}>
-                      <div>
-                        {toolMessageItem.type}
+              {tools &&
+                tools.length &&
+                (tools[activeTab].messages ?? []).map((toolMessageItem, i) => {
+                  return (
+                    <div className="conversation-item" key={i}>
+                      <div
+                        className={`speaker ${
+                          toolMessageItem.type === 'input'
+                            ? 'user'
+                            : 'assistant'
+                        }`}
+                      >
+                        <div>{toolMessageItem.type}</div>
+                      </div>
+                      <div className={`speaker-content`}>
+                        {renderToolContent(
+                          toolMessageItem.content,
+                          toolMessageItem.sources,
+                          toolMessageItem.artifacts
+                        )}
                       </div>
                     </div>
-                    <div className={`speaker-content`}>  
-                      {renderToolContent(toolMessageItem.content, toolMessageItem.sources, toolMessageItem.artifacts)}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         </div>
