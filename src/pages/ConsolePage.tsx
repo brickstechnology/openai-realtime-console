@@ -417,6 +417,14 @@ export function ConsolePage() {
     // Set transcription, otherwise we don't get user transcriptions back
     client.updateSession({ input_audio_transcription: { model: 'whisper-1' } });
 
+    client.updateSession({
+      model: 'gpt-4o-mini-realtime-preview',
+    });
+
+    client.updateSession({
+      voice: 'coral',
+    });
+
     // execute fetch request to get the tools
     const fetchTools = async () => {
       const response = await fetch(
@@ -631,7 +639,7 @@ export function ConsolePage() {
     <div data-component="ConsolePage">
       <div className="content-top">
         <div className="content-title">
-          <img src="/openai-logomark.svg" />
+          <img src="/bricks_logo_1.svg" />
           <span>realtime console</span>
         </div>
         <div className="content-api-key">
